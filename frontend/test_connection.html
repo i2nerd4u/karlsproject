@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test AWS Connection</title>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1001.0.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .test-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .test-result {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #0069d9;
+        }
+        
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>AWS Connection Test</h1>
+    
+    <div class="test-section">
+        <div class="test-title">1. AWS SDK Loaded</div>
+        <div id="sdkResult" class="test-result pending">Testing...</div>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">2. AWS Configuration</div>
+        <div id="configResult" class="test-result pending">Testing...</div>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">3. DynamoDB Connection</div>
+        <button id="testDynamoBtn">Test DynamoDB</button>
+        <div id="dynamoResult" class="test-result pending">Click button to test</div>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">4. Create Test Item</div>
+        <button id="createItemBtn">Create Test Item</button>
+        <div id="createResult" class="test-result pending">Click button to test</div>
+    </div>
+    
+    <script src="aws-config.js"></script>
+    <script>
+        // Test 1: Check if AWS SDK is loaded
+        function testAwsSdk() {
+            const resultElement = document.getElementById('sdkResult');
+            
+            try {
+                if (typeof AWS === 'undefined') {
+                    resultElement.textContent = 'Error: AWS SDK not loaded';
+                    resultElement.className = 'test-result error';
+                } else {
+                    resultElement.textContent = 'Success: AWS SDK loaded correctly';
+                    resultElement.className = 'test-result success';
+                }
+            } catch (e) {
+                resultElement.textContent = 'Error: ' + e.message;
+                resultElement.className = 'test-result error';
+            }
+        }
+        
+        // Test 2: Check AWS configuration
+        function testAwsConfig() {
+            const resultElement = document.getElementById('configResult');
+            
+            try {
+                if (typeof AWS.config.credentials === 'undefined') {
+                    resultElement.textContent = 'Error: AWS credentials not configured';
+                    resultElement.className = 'test-result error';
+                } else {
+                    resultElement.textContent = 'Success: AWS configured with region: ' + AWS.config.region;
+                    resultElement.className = 'test-result success';
+                }
+            } catch (e) {
+                resultElement.textContent = 'Error: ' + e.message;
+                resultElement.className = 'test-result error';
+            }
+        }
+        
+        // Test 3: Test DynamoDB connection
+        function testDynamoDb() {
+            const resultElement = document.getElementById('dynamoResult');
+            resultElement.textContent = 'Testing DynamoDB connection...';
+            resultElement.className = 'test-result pending';
+            
+            try {
+                const dynamodb = new AWS.DynamoDB();
+                
+                dynamodb.listTables({}, function(err, data) {
+                    if (err) {
+                        resultElement.textContent = 'Error: ' + err.message;
+                        resultElement.className = 'test-result error';
+                    } else {
+                        let tableList = data.TableNames.join(', ');
+                        if (tableList === '') tableList = '(no tables)';
+                        
+                        resultElement.textContent = 'Success: Connected to DynamoDB. Tables: ' + tableList;
+                        resultElement.className = 'test-result success';
+                        
+                        // Check if our table exists
+                        if (data.TableNames.includes(DYNAMODB_TABLE)) {
+                            resultElement.textContent += '\nTable "' + DYNAMODB_TABLE + '" exists!';
+                        } else {
+                            resultElement.textContent += '\nWarning: Table "' + DYNAMODB_TABLE + '" not found!';
+                        }
+                    }
+                });
+            } catch (e) {
+                resultElement.textContent = 'Error: ' + e.message;
+                resultElement.className = 'test-result error';
+            }
+        }
+        
+        // Test 4: Create test item
+        function createTestItem() {
+            const resultElement = document.getElementById('createResult');
+            resultElement.textContent = 'Creating test item...';
+            resultElement.className = 'test-result pending';
+            
+            try {
+                const dynamodb = new AWS.DynamoDB.DocumentClient();
+                
+                const testItem = {
+                    userId: 'test_' + Date.now(),
+                    name: 'Test User',
+                    email: 'test@example.com',
+                    weight: '70',
+                    height: '175',
+                    calorieGoal: '2000'
+                };
+                
+                const params = {
+                    TableName: DYNAMODB_TABLE,
+                    Item: testItem
+                };
+                
+                dynamodb.put(params, function(err, data) {
+                    if (err) {
+                        resultElement.textContent = 'Error: ' + err.message;
+                        resultElement.className = 'test-result error';
+                    } else {
+                        resultElement.innerHTML = 'Success: Test item created!<br><pre>' + 
+                            JSON.stringify(testItem, null, 2) + '</pre>';
+                        resultElement.className = 'test-result success';
+                    }
+                });
+            } catch (e) {
+                resultElement.textContent = 'Error: ' + e.message;
+                resultElement.className = 'test-result error';
+            }
+        }
+        
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            testAwsSdk();
+            testAwsConfig();
+            
+            document.getElementById('testDynamoBtn').addEventListener('click', testDynamoDb);
+            document.getElementById('createItemBtn').addEventListener('click', createTestItem);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Login</title>
+</head>
+<body>
+    <h1>Debug Login Test</h1>
+    <form id="testForm">
+        <input type="email" id="email" value="test@test.com" placeholder="Email">
+        <input type="password" id="password" value="test123" placeholder="Password">
+        <button type="submit">Test Login</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        // Simple test without external dependencies
+        document.getElementById('testForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const result = document.getElementById('result');
+            
+            try {
+                // Test localStorage
+                const testUser = {
+                    email: email,
+                    password: password,
+                    userId: 'test123'
+                };
+                
+                localStorage.setItem('testUser', JSON.stringify(testUser));
+                const retrieved = JSON.parse(localStorage.getItem('testUser'));
+                
+                result.innerHTML = `<p style="color: green;">SUCCESS: ${JSON.stringify(retrieved)}</p>`;
+                
+                // Redirect test
+                setTimeout(() => {
+                    result.innerHTML += '<p>Redirecting in 2 seconds...</p>';
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                }, 1000);
+                
+            } catch (error) {
+                result.innerHTML = `<p style="color: red;">ERROR: ${error.message}</p>`;
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>

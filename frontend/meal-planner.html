@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Meal Planner - MealMate</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .planner-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .day-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .day-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+        
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid rgba(44,62,80,0.1);
+            padding-bottom: 12px;
+        }
+        
+        .day-header h3 {
+            color: #2c3e50;
+            font-size: 1.4rem;
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .day-total {
+            background: linear-gradient(135deg, #00e676 0%, #00c853 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 2px 6px rgba(0,230,118,0.3);
+        }
+        
+        .meal-slot {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+        
+        .meal-slot:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-color: rgba(44,62,80,0.1);
+        }
+        
+        .meal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .add-meal-btn {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(44,62,80,0.2);
+        }
+        
+        .add-meal-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(44,62,80,0.3);
+        }
+        
+        .meal-header h4 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .meal-item {
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .meal-item:last-child {
+            border-bottom: none;
+        }
+        
+        .meal-emoji {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        
+        .meal-details {
+            flex: 1;
+        }
+        
+        .meal-name {
+            font-weight: bold;
+        }
+        
+        .meal-calories {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .remove-meal {
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        .total-calories {
+            text-align: right;
+            font-weight: bold;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #ddd;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 500px;
+            margin: 100px auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .food-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .food-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .food-emoji {
+            font-size: 30px;
+            margin-bottom: 5px;
+        }
+        
+        .food-name {
+            font-size: 12px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .food-calories {
+            font-size: 11px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html" class="logo" style="text-decoration: none; color: inherit; font-size: 1.5rem; font-weight: bold;">MealMate</a>
+        <div class="auth-buttons" id="authButtons">
+            <a href="index.html" class="btn" style="background: #2c3e50; color: white; margin-right: 10px;">Home</a>
+            <a href="user_dashboard.html" class="btn" style="background: #2c3e50; color: white;">Dashboard</a>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <h1>Weekly Meal Planner</h1>
+        <p>Plan your meals for the week and track your calorie intake</p>
+        
+        <div class="planner-container">
+            <div id="weeklyPlanner">
+                <!-- Days will be generated by JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <h4>MacroLense</h4>
+    </footer>
+    
+    <!-- Add Meal Modal -->
+    <div id="addMealModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeMealModal">×</button>
+            <h3>Add Meal</h3>
+            
+            <div style="margin: 15px 0;">
+                <label for="mealSearch" style="display: block; margin-bottom: 5px;">Search for food:</label>
+                <input type="text" id="mealSearch" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="e.g., Apple, Chicken, etc.">
+            </div>
+            
+            <div id="searchResults" style="margin-top: 10px; max-height: 300px; overflow-y: auto;"></div>
+            
+            <!-- Custom Food Section -->
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+                <h4>Add Custom Food</h4>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" id="customFoodName" placeholder="Food name" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="number" id="customFoodCalories" placeholder="Calories" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <button id="addCustomFood" style="background: #2c3e50; color: white; border: none; border-radius: 4px; padding: 8px 15px; cursor: pointer; width: 100%;">Add Custom Food</button>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <h4>Common Foods</h4>
+                <div class="food-grid" id="commonFoods"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inline nutrition functions since nutrition-db.js may not load
+        function searchFood(query) {
+            const foods = [
+                {name: 'apple', calories: 95, emoji: '🍎'},
+                {name: 'banana', calories: 105, emoji: '🍌'},
+                {name: 'orange', calories: 62, emoji: '🍊'},
+                {name: 'chicken', calories: 165, emoji: '🍗'},
+                {name: 'rice', calories: 130, emoji: '🍚'},
+                {name: 'bread', calories: 79, emoji: '🍞'}
+            ];
+            return foods.filter(food => food.name.includes(query.toLowerCase()));
+        }
+        
+        function getFoodsByCategory(category) {
+            const fruits = [
+                {name: 'apple', calories: 95, emoji: '🍎'},
+                {name: 'banana', calories: 105, emoji: '🍌'},
+                {name: 'orange', calories: 62, emoji: '🍊'},
+                {name: 'strawberry', calories: 32, emoji: '🍓'},
+                {name: 'grape', calories: 69, emoji: '🍇'},
+                {name: 'watermelon', calories: 30, emoji: '🍉'}
+            ];
+            const vegetables = [
+                {name: 'broccoli', calories: 31, emoji: '🥦'},
+                {name: 'carrot', calories: 41, emoji: '🥕'},
+                {name: 'tomato', calories: 18, emoji: '🍅'},
+                {name: 'cucumber', calories: 15, emoji: '🥒'},
+                {name: 'spinach', calories: 23, emoji: '🥬'},
+                {name: 'potato', calories: 77, emoji: '🥔'}
+            ];
+            return category === 'fruits' ? fruits : vegetables;
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is logged in
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            const userDataString = localStorage.getItem('userData');
+            const idToken = localStorage.getItem('id_token');
+            
+            // Skip login check for now
+            // if (!isLoggedIn && !userDataString && !idToken) {
+            //     window.location.href = 'index.html';
+            //     return;
+            // }
+            
+            // Initialize the weekly planner
+            initWeeklyPlanner();
+            
+            // Set up the add meal modal
+            setupAddMealModal();
+        });
+        
+        function initWeeklyPlanner() {
+            const weeklyPlanner = document.getElementById('weeklyPlanner');
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            const meals = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
+            
+            // Load saved meal plan
+            const mealPlan = JSON.parse(localStorage.getItem('weeklyMealPlan') || '{}');
+            
+            days.forEach(day => {
+                const dayCard = document.createElement('div');
+                dayCard.className = 'day-card';
+                
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'day-header';
+                dayHeader.innerHTML = `
+                    <h3>${day}</h3>
+                    <div class="day-total">Total: <span id="${day.toLowerCase()}-total">0</span> calories</div>
+                `;
+                
+                dayCard.appendChild(dayHeader);
+                
+                let dayTotal = 0; // Always start at 0
+                
+                meals.forEach(meal => {
+                    const mealSlot = document.createElement('div');
+                    mealSlot.className = 'meal-slot';
+                    
+                    const mealHeader = document.createElement('div');
+                    mealHeader.className = 'meal-header';
+                    mealHeader.innerHTML = `
+                        <h4>${meal}</h4>
+                        <button class="add-meal-btn" data-day="${day}" data-meal="${meal}">+ Add Food</button>
+                    `;
+                    
+                    mealSlot.appendChild(mealHeader);
+                    
+                    const mealItems = document.createElement('div');
+                    mealItems.className = 'meal-items';
+                    mealItems.id = `${day.toLowerCase()}-${meal.toLowerCase()}`;
+                    
+                    mealSlot.appendChild(mealItems);
+                    
+                    // Skip loading saved meals for now to prevent errors
+                    // const dayMeals = mealPlan[day] || {};
+                    // const mealFoods = dayMeals[meal] || [];
+                    
+                    // mealFoods.forEach(food => {
+                    //     addMealItemToUI(day, meal, food);
+                    //     dayTotal += food.calories;
+                    // });
+                    
+                    
+                    mealSlot.appendChild(mealItems);
+                    dayCard.appendChild(mealSlot);
+                });
+                
+                weeklyPlanner.appendChild(dayCard);
+                
+                // Update day total - ensure it shows 0 if no meals
+                document.getElementById(`${day.toLowerCase()}-total`).textContent = dayTotal || 0;
+            });
+            
+            // Add event listeners to add meal buttons
+            document.querySelectorAll('.add-meal-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const day = this.getAttribute('data-day');
+                    const meal = this.getAttribute('data-meal');
+                    openAddMealModal(day, meal);
+                });
+            });
+        }
+        
+        function setupAddMealModal() {
+            const modal = document.getElementById('addMealModal');
+            const closeBtn = document.getElementById('closeMealModal');
+            const searchInput = document.getElementById('mealSearch');
+            const searchResults = document.getElementById('searchResults');
+            const commonFoods = document.getElementById('commonFoods');
+            
+            // Close modal when clicking the close button
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // Search functionality
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim();
+                if (query.length < 2) {
+                    searchResults.innerHTML = '';
+                    return;
+                }
+                
+                // Search in both built-in database and custom foods
+                const builtInResults = searchFood(query);
+                const customFoods = JSON.parse(localStorage.getItem('customFoods') || '[]');
+                const customResults = customFoods.filter(food => 
+                    food.name.toLowerCase().includes(query.toLowerCase())
+                );
+                
+                const allResults = [...builtInResults, ...customResults];
+                
+                if (allResults.length > 0) {
+                    searchResults.innerHTML = '';
+                    allResults.forEach(food => {
+                        const item = document.createElement('div');
+                        item.className = 'meal-item';
+                        item.innerHTML = `
+                            <div class="meal-emoji">${food.emoji || '🍽️'}</div>
+                            <div class="meal-details">
+                                <div class="meal-name">${food.name}</div>
+                                <div class="meal-calories">${food.calories} calories</div>
+                            </div>
+                        `;
+                        
+                        item.addEventListener('click', function() {
+                            addMealToPlanner(food);
+                        });
+                        
+                        searchResults.appendChild(item);
+                    });
+                } else {
+                    searchResults.innerHTML = '<p style="text-align: center; padding: 10px;">No results found</p>';
+                }
+            });
+            
+            // Custom food functionality
+            document.getElementById('addCustomFood').addEventListener('click', function() {
+                const name = document.getElementById('customFoodName').value.trim();
+                const calories = parseInt(document.getElementById('customFoodCalories').value) || 0;
+                
+                if (!name || calories <= 0) {
+                    alert('Please enter both food name and calories');
+                    return;
+                }
+                
+                const customFood = {
+                    name: name,
+                    calories: calories,
+                    emoji: '🍽️'
+                };
+                
+                addMealToPlanner(customFood);
+                
+                // Save to custom foods
+                const customFoods = JSON.parse(localStorage.getItem('customFoods') || '[]');
+                const existingIndex = customFoods.findIndex(food => food.name.toLowerCase() === name.toLowerCase());
+                
+                if (existingIndex === -1) {
+                    customFoods.push(customFood);
+                    localStorage.setItem('customFoods', JSON.stringify(customFoods));
+                }
+                
+                // Clear inputs
+                document.getElementById('customFoodName').value = '';
+                document.getElementById('customFoodCalories').value = '';
+            });
+            
+            // Populate common foods
+            const fruits = getFoodsByCategory('fruits').slice(0, 6);
+            const vegetables = getFoodsByCategory('vegetables').slice(0, 6);
+            const commonFoodsList = [...fruits, ...vegetables];
+            
+            commonFoodsList.forEach(food => {
+                const foodItem = document.createElement('div');
+                foodItem.className = 'food-item';
+                foodItem.innerHTML = `
+                    <div class="food-emoji">${food.emoji || '🍽️'}</div>
+                    <div class="food-name">${food.name}</div>
+                    <div class="food-calories">${food.calories} cal</div>
+                `;
+                
+                foodItem.addEventListener('click', function() {
+                    addMealToPlanner(food);
+                });
+                
+                commonFoods.appendChild(foodItem);
+            });
+        }
+        
+        let currentDay = '';
+        let currentMeal = '';
+        
+        function openAddMealModal(day, meal) {
+            currentDay = day;
+            currentMeal = meal;
+            document.getElementById('addMealModal').style.display = 'block';
+            document.getElementById('mealSearch').value = '';
+            document.getElementById('searchResults').innerHTML = '';
+        }
+        
+        function addMealToPlanner(food) {
+            // Add to UI
+            addMealItemToUI(currentDay, currentMeal, food);
+            
+            // Save to localStorage
+            const mealPlan = JSON.parse(localStorage.getItem('weeklyMealPlan') || '{}');
+            
+            if (!mealPlan[currentDay]) {
+                mealPlan[currentDay] = {};
+            }
+            
+            if (!mealPlan[currentDay][currentMeal]) {
+                mealPlan[currentDay][currentMeal] = [];
+            }
+            
+            mealPlan[currentDay][currentMeal].push(food);
+            localStorage.setItem('weeklyMealPlan', JSON.stringify(mealPlan));
+            
+            // Update day total
+            const dayTotalElement = document.getElementById(`${currentDay.toLowerCase()}-total`);
+            const currentTotal = parseInt(dayTotalElement.textContent) || 0;
+            dayTotalElement.textContent = currentTotal + food.calories;
+            
+            // Close modal
+            document.getElementById('addMealModal').style.display = 'none';
+        }
+        
+        function addMealItemToUI(day, meal, food) {
+            const mealItemsContainer = document.getElementById(`${day.toLowerCase()}-${meal.toLowerCase()}`);
+            
+            if (!mealItemsContainer) {
+                console.error('Meal container not found:', `${day.toLowerCase()}-${meal.toLowerCase()}`);
+                return;
+            }
+            
+            const mealItem = document.createElement('div');
+            mealItem.className = 'meal-item';
+            mealItem.dataset.calories = food.calories;
+            
+            mealItem.innerHTML = `
+                <div class="meal-emoji">${food.emoji || '🍽️'}</div>
+                <div class="meal-details">
+                    <div class="meal-name">${food.name}</div>
+                    <div class="meal-calories">${food.calories} calories</div>
+                </div>
+                <div class="remove-meal">×</div>
+            `;
+            
+            // Add remove functionality
+            mealItem.querySelector('.remove-meal').addEventListener('click', function() {
+                removeMealItem(day, meal, mealItem, food);
+            });
+            
+            mealItemsContainer.appendChild(mealItem);
+        }
+        
+        function removeMealItem(day, meal, element, food) {
+            // Remove from UI
+            element.remove();
+            
+            // Update day total
+            const dayTotalElement = document.getElementById(`${day.toLowerCase()}-total`);
+            const currentTotal = parseInt(dayTotalElement.textContent) || 0;
+            dayTotalElement.textContent = currentTotal - food.calories;
+            
+            // Remove from localStorage
+            const mealPlan = JSON.parse(localStorage.getItem('weeklyMealPlan') || '{}');
+            
+            if (mealPlan[day] && mealPlan[day][meal]) {
+                const index = mealPlan[day][meal].findIndex(item => 
+                    item.name === food.name && item.calories === food.calories
+                );
+                
+                if (index !== -1) {
+                    mealPlan[day][meal].splice(index, 1);
+                    localStorage.setItem('weeklyMealPlan', JSON.stringify(mealPlan));
+                }
+            }
+        }
+    </script>
+</body>
+</html>

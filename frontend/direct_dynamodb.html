@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct DynamoDB - MealMate</title>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1001.0.min.js"></script>
+</head>
+<body>
+    <h1>Direct DynamoDB Test</h1>
+    <button onclick="addUserDirectly()">Add User to DynamoDB</button>
+    <div id="result"></div>
+
+    <script>
+    // Configure AWS - Replace with your credentials
+    AWS.config.update({
+        region: 'us-east-1',
+        accessKeyId: 'YOUR_ACCESS_KEY_ID',
+        secretAccessKey: 'YOUR_SECRET_ACCESS_KEY'
+    });
+
+    const dynamodb = new AWS.DynamoDB.DocumentClient();
+
+    async function addUserDirectly() {
+        const userData = {
+            userId: 'direct_user_' + Date.now(),
+            name: 'Direct Test User',
+            email: 'direct@example.com',
+            age: 28,
+            weight: 75.5,
+            height: 180,
+            calorieGoal: 2200,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        const params = {
+            TableName: 'results',
+            Item: userData
+        };
+
+        try {
+            console.log('Adding user directly to DynamoDB:', userData);
+            
+            const result = await dynamodb.put(params).promise();
+            console.log('Success:', result);
+            
+            document.getElementById('result').innerHTML = `
+                <h3>Success!</h3>
+                <p>User added to DynamoDB: ${userData.userId}</p>
+                <pre>${JSON.stringify(userData, null, 2)}</pre>
+            `;
+            
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('result').innerHTML = `
+                <h3>Error:</h3>
+                <p>${error.message}</p>
+            `;
+        }
+    }
+    </script>
+</body>
+</html>

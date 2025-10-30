@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Image Upload</title>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1001.0.min.js"></script>
+    <script src="aws-config.js"></script>
+    <script src="api-client.js"></script>
+</head>
+<body>
+    <h1>Test Image Upload</h1>
+    
+    <div>
+        <input type="file" id="testFile" accept="image/*">
+        <button onclick="testUpload()">Test Upload</button>
+    </div>
+    
+    <div id="result" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;"></div>
+    
+    <script>
+        function testUpload() {
+            const fileInput = document.getElementById('testFile');
+            const resultDiv = document.getElementById('result');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = '<span style="color: red;">Please select a file first</span>';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function() {
+                const base64 = reader.result.split(',')[1];
+                
+                resultDiv.innerHTML = '<span style="color: blue;">Uploading...</span>';
+                
+                // Test the upload without auth for now
+                fetch(`${apiConfig.apiUrl}/upload-image`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        imageBase64: base64,
+                        fileType: file.type,
+                        userId: 'test-user'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.imageUrl) {
+                        resultDiv.innerHTML = `
+                            <span style="color: green;">Upload successful!</span><br>
+                            <strong>Image URL:</strong> <a href="${data.imageUrl}" target="_blank">${data.imageUrl}</a><br>
+                            <strong>Filename:</strong> ${data.filename}<br>
+                            <strong>User ID:</strong> ${data.userId}
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `<span style="color: red;">Upload failed: ${data.error || 'Unknown error'}</span>`;
+                    }
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `<span style="color: red;">Upload failed: ${error.message}</span>`;
+                });
+            };
+            
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>
